@@ -3,6 +3,8 @@
 #include <vector>
 #include <memory>
 
+#include "base.hpp"
+
 class Curve
 {
 public:
@@ -10,6 +12,7 @@ public:
     virtual std::vector<double> yIntersections(double xLevel) const = 0;
     virtual std::pair<double, double> xBoundaries() const = 0;
     virtual std::pair<double, double> yBoundaries() const = 0;
+    virtual std::pair<double, double> getNormal(Point p) const = 0;
     virtual ~Curve() {};
 };
 

@@ -1,11 +1,11 @@
 import csv
 from matplotlib import pyplot as plt
 
-with open("build/Debug/innerNodes.csv") as csvfile:
+with open("build/innerNodes.csv") as csvfile:
     raw = csv.reader(csvfile, delimiter=" ", quotechar="|")
     innerNodes = list(raw)
 
-with open("build/Debug/outerNodes.csv") as csvfile:
+with open("build/outerNodes.csv") as csvfile:
     raw = csv.reader(csvfile, delimiter=" ", quotechar="|")
     outerNodes = list(raw)
 

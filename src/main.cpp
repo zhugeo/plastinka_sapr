@@ -3,6 +3,7 @@
 
 #include "border.hpp"
 #include "model.hpp"
+#include "solvers.hpp"
 #include "arc.hpp"
 #include "line.hpp"
 #include "generate_grid.hpp"
@@ -31,4 +32,6 @@ int main()
 
     Grid g = generateGrid(model, 2, 2);
     g.writeToFile("innerNodes.csv", "outerNodes.csv");
+
+    solveImplicit(model, g, 0.1, 100, 100.0);
 }

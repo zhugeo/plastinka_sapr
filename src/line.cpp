@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 
 #include "line.hpp"
 
@@ -48,4 +49,10 @@ std::pair<double, double> Line::xBoundaries() const
 std::pair<double, double> Line::yBoundaries() const
 {
     return std::make_pair(std::min(start.y, end.y), std::max(start.y, end.y));
+}
+
+std::pair<double, double> Line::getNormal(Point p) const
+{
+    double len = std::sqrt(std::pow(start.x - end.x, 2) + std::pow(start.y - end.y, 2));
+    return std::make_pair((start.y - end.y) / len, -(start.x - end.x) / len);
 }

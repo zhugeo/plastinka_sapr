@@ -90,3 +90,9 @@ std::pair<double, double> Arc::yBoundaries() const
 {
     return std::make_pair(center.y - R, center.y + R);
 }
+
+std::pair<double, double> Arc::getNormal(Point p) const
+{
+    double RLen = std::sqrt(std::pow(p.x - center.x, 2) + std::pow(p.x - center.x, 2));
+    return std::make_pair((center.x - p.x) / RLen, (center.y - p.y) / RLen);
+}

@@ -11,6 +11,7 @@ public:
     virtual std::vector<double> yIntersections(double xLevel) const override;
     virtual std::pair<double, double> xBoundaries() const override;
     virtual std::pair<double, double> yBoundaries() const override;
+    virtual std::pair<double, double> getNormal(Point p) const override;
 
 private:
     Point start, end;

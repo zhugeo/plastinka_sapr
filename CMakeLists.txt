@@ -7,5 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 file(GLOB sources "src/*.cpp")
 
+
 add_executable(Plastinka ${sources})
-include_directories(include)
+target_include_directories(Plastinka PUBLIC include 3rdparty/eigen)
