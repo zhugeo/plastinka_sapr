@@ -33,7 +33,6 @@ std::vector<double> Arc::xIntersections(double yLevel) const
         }
 
         angle *= 180 / std::numbers::pi;
-        std::cout << "Angle: " << angle << std::endl;
 
         if (angle >= startAngle - 0.1 && angle <= stopAngle + 0.1)
         {
@@ -71,7 +70,6 @@ std::vector<double> Arc::yIntersections(double xLevel) const
         }
 
         angle *= 180 / std::numbers::pi;
-        std::cout << "Angle: " << angle << std::endl;
 
         if (angle >= startAngle - 0.1 && angle <= stopAngle + 0.1)
         {

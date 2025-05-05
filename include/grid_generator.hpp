@@ -38,6 +38,7 @@ private:
     void bottomToUpScan(void);
     void leftToRightScan(void);
     void connectNodes(void);
+    void loadNodesToGrid(void);
     void validateGridIntegrity(void) const;
 
     std::weak_ptr<Node> findNodeByCoords(int xSliceIndex,

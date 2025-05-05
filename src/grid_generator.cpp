@@ -29,9 +29,10 @@ Grid GridGenerator::generateGrid(void)
     grid.yStep = yStep;
     calculateModelDimensions();
     makeSlices();
-    leftToRightScan();
     bottomToUpScan();
+    leftToRightScan();
     connectNodes();
+    loadNodesToGrid();
     validateGridIntegrity();
 
     grid.makeNodeIndexes();
@@ -78,14 +79,14 @@ void GridGenerator::bottomToUpScan(void)
     // Проход "снизу вверх"
     for (int ySliceIndex = 0; ySliceIndex < grid.ySlices.size(); ySliceIndex++)
     {
-        auto currentY = grid.ySlices[ySliceIndex];
+        const auto &currentY = grid.ySlices[ySliceIndex];
         std::vector<std::pair<double, Border>> intersections; // Массив X-координат точек пересечения
-        for (auto bord : model.borders)
+        for (auto border : model.borders)
         {
-            auto delta = bord.curve->xIntersections(currentY);
+            auto delta = border.curve->xIntersections(currentY);
             for (auto in : delta)
             {
-                intersections.push_back(std::make_pair(in, bord));
+                intersections.push_back(std::make_pair(in, border));
             }
         }
         std::sort(intersections.begin(), intersections.end(), [](auto a, auto b)
@@ -113,14 +114,14 @@ void GridGenerator::bottomToUpScan(void)
 
         int i = 0;
 
-        for (int sliceIndex = 0; sliceIndex < xSlices.size() && i < intersections.size(); sliceIndex++)
+        for (int xSliceIndex = 0; xSliceIndex < xSlices.size() && i < intersections.size(); xSliceIndex++)
         {
-            auto currentX = xSlices[sliceIndex];
+            const auto &currentX = xSlices[xSliceIndex];
 
             // Проверить, является ли модель "плохой" для создания сетки
-            if (i + 1 < intersections.size() && sliceIndex + 1 < xSlices.size())
+            if (i + 1 < intersections.size() && xSliceIndex + 1 < xSlices.size())
             {
-                if (intersections[i + 1].first <= xSlices[sliceIndex + 1])
+                if (intersections[i + 1].first <= xSlices[xSliceIndex + 1])
                 {
                     throw std::runtime_error("Cant generate grid; try setting more fine grid step");
                 }
@@ -141,7 +142,7 @@ void GridGenerator::bottomToUpScan(void)
                     }
                     borderValue *= normal.first;
                 }
-                outerHorizontalNodes.emplace(std::make_pair(sliceIndex, ySliceIndex),
+                outerHorizontalNodes.emplace(std::make_pair(xSliceIndex, ySliceIndex),
                                              std::make_shared<OuterNode>(point,
                                                                          (i % 2 == 0 ? OuterNodeSide::Bottom : OuterNodeSide::Top),
                                                                          border.type,
@@ -151,7 +152,7 @@ void GridGenerator::bottomToUpScan(void)
             }
             else if (i % 2 != 0)
             {
-                innerNodes.emplace(std::make_pair(sliceIndex, ySliceIndex),
+                innerNodes.emplace(std::make_pair(xSliceIndex, ySliceIndex),
                                    std::make_shared<InnerNode>(Point(currentX, currentY)));
             }
             if (intersections[i].first < currentX + xStep)
@@ -169,7 +170,7 @@ void GridGenerator::bottomToUpScan(void)
                     }
                     borderValue *= normal.first;
                 }
-                outerHorizontalNodes.emplace(std::make_pair(sliceIndex + (i % 2 == 0 ? 0 : +1), ySliceIndex),
+                outerHorizontalNodes.emplace(std::make_pair(xSliceIndex + (i % 2 == 0 ? 0 : +1), ySliceIndex),
                                              std::make_shared<OuterNode>(point,
                                                                          (i % 2 == 0 ? OuterNodeSide::Bottom : OuterNodeSide::Top),
                                                                          border.type,
@@ -188,18 +189,16 @@ void GridGenerator::leftToRightScan(void)
     {
         auto currentX = xSlices[xSliceIndex];
         std::vector<std::pair<double, Border>> intersections; // Массив Y-координат точек пересечения
-        for (auto bord : model.borders)
+        for (auto border : model.borders)
         {
-            auto delta = bord.curve->yIntersections(currentX);
+            auto delta = border.curve->yIntersections(currentX);
             for (auto in : delta)
             {
-                intersections.push_back(std::make_pair(in, bord));
-                std::cout << in << std::endl;
+                intersections.push_back(std::make_pair(in, border));
             }
         }
         std::sort(intersections.begin(), intersections.end(), [](auto a, auto b)
                   { return a.first < b.first; });
-        std::cout << std::endl;
 
         // Подчищаем "близко расположенные" точки
         for (int i = 0; i < intersections.size() - 1;)
@@ -223,14 +222,14 @@ void GridGenerator::leftToRightScan(void)
 
         int i = 0;
 
-        for (int sliceIndex = 0; sliceIndex < ySlices.size() && i < intersections.size(); sliceIndex++)
+        for (int ySliceIndex = 0; ySliceIndex < ySlices.size() && i < intersections.size(); ySliceIndex++)
         {
-            auto currentY = ySlices[sliceIndex];
+            auto currentY = ySlices[ySliceIndex];
 
             // Проверить ред флаг
-            if (i + 1 < intersections.size() && sliceIndex + 1 < ySlices.size())
+            if (i + 1 < intersections.size() && ySliceIndex + 1 < ySlices.size())
             {
-                if (intersections[i + 1].first <= ySlices[sliceIndex + 1])
+                if (intersections[i + 1].first <= ySlices[ySliceIndex + 1])
                 {
                     throw std::runtime_error("Cant generate grid; try setting more fine grid step");
                 }
@@ -251,12 +250,13 @@ void GridGenerator::leftToRightScan(void)
                     }
                     borderValue *= normal.second;
                 }
-                outerVerticalNodes.emplace(std::make_pair(xSliceIndex, sliceIndex),
+                const auto &sliceCoords = std::make_pair(xSliceIndex, ySliceIndex);
+                outerVerticalNodes.emplace(sliceCoords,
                                            std::make_shared<OuterNode>(point,
                                                                        (i % 2 == 0 ? OuterNodeSide::Left : OuterNodeSide::Right),
                                                                        border.type,
                                                                        borderValue));
-                auto iter = innerNodes.find(std::make_pair(xSliceIndex, sliceIndex));
+                auto iter = innerNodes.find(sliceCoords);
                 if (iter != innerNodes.end())
                 {
                     innerNodes.erase(iter);
@@ -279,7 +279,7 @@ void GridGenerator::leftToRightScan(void)
                     }
                     borderValue *= normal.second;
                 }
-                outerVerticalNodes.emplace(std::make_pair(xSliceIndex, sliceIndex + (i % 2 == 0 ? 0 : +1)),
+                outerVerticalNodes.emplace(std::make_pair(xSliceIndex, ySliceIndex + (i % 2 == 0 ? 0 : +1)),
                                            std::make_shared<OuterNode>(point,
                                                                        (i % 2 == 0 ? OuterNodeSide::Left : OuterNodeSide::Right),
                                                                        border.type,
@@ -297,9 +297,8 @@ void GridGenerator::connectNodes(void)
     for (auto node1 : innerNodes)
     {
         auto node = node1.second;
-        grid.innerNodes.push_back(node);
-        int xSliceIndex = node1.first.first;
-        int ySliceIndex = node1.first.second;
+        const auto &xSliceIndex = node1.first.first;
+        const auto &ySliceIndex = node1.first.second;
 
         const auto &bottom = findNodeByCoords(xSliceIndex, ySliceIndex - 1, false, true);
         const auto &top = findNodeByCoords(xSliceIndex, ySliceIndex + 1, false, true);
@@ -313,11 +312,34 @@ void GridGenerator::connectNodes(void)
     }
 }
 
+void GridGenerator::loadNodesToGrid(void)
+{
+    const auto &addIfOuterNode = [&](const std::weak_ptr<Node> &node)
+    {
+        const auto &outerNodeSmartPtrCast = dynamic_pointer_cast<OuterNode>(node.lock());
+        if (outerNodeSmartPtrCast != nullptr)
+        {
+            grid.outerNodes.push_back(outerNodeSmartPtrCast);
+        }
+    };
+
+    for (auto i : innerNodes)
+    {
+        const auto &innerNode = i.second;
+        grid.innerNodes.push_back(innerNode);
+        addIfOuterNode(innerNode->left);
+        addIfOuterNode(innerNode->right);
+        addIfOuterNode(innerNode->top);
+        addIfOuterNode(innerNode->bottom);
+    }
+}
+
 void GridGenerator::validateGridIntegrity(void) const
 {
     for (int i = 0; i < grid.innerNodes.size(); i++)
     {
         const auto &node = grid.innerNodes[i];
+
         const auto &left = node->left;
         const auto &right = node->right;
         const auto &top = node->top;

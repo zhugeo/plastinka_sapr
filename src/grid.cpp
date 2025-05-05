@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iostream>
+#include <cassert>
 
 #include "grid.hpp"
 
@@ -55,25 +56,29 @@ int Grid::getNodeIndex(const std::shared_ptr<const Node> &node) const
     auto iter2 = outerIndex.find(node.get());
     if (iter1 != innerIndex.end())
     {
-        return iter1->second;
+        const auto &result = iter1->second;
+        assert(result < innerNodes.size() + outerNodes.size());
+        return result;
     }
     if (iter2 != outerIndex.end())
     {
-        return iter2->second + static_cast<int>(innerNodes.size());
+        const auto &result = iter2->second + static_cast<int>(innerNodes.size());
+        assert(result < innerNodes.size() + outerNodes.size());
+        return result;
     }
     throw std::runtime_error("getNodeIndex failed");
 }
 
 void Grid::makeNodeIndexes(void)
 {
-    innerIndex = std::map<const Node *, int>{};
-    outerIndex = std::map<const Node *, int>{};
+    innerIndex = std::map<const Node *, int>();
+    outerIndex = std::map<const Node *, int>();
     for (int i = 0; i < innerNodes.size(); i++)
     {
-        outerIndex.emplace(innerNodes[i].get(), i);
+        innerIndex.emplace(innerNodes[i].get(), i);
     }
     for (int i = 0; i < outerNodes.size(); i++)
     {
-        innerIndex.emplace(outerNodes[i].get(), i);
+        outerIndex.emplace(outerNodes[i].get(), i);
     }
 }
