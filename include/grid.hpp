@@ -51,18 +51,18 @@ public:
     void writeToFile(const std::string &innerNodesFileName, const std::string &outerNodesFileName) const;
 
     int getNodeIndex(const std::shared_ptr<const Node> &) const;
-    void makeNodeIndexes(void);
-    void validateIntegrity(void) const;
 
     std::vector<std::shared_ptr<InnerNode>> innerNodes;
     std::vector<std::shared_ptr<OuterNode>> outerNodes;
 
-    std::vector<double> xSlices;
-    std::vector<double> ySlices;
+    std::vector<double> xSlices, ySlices;
 
     double xStep, yStep;
 
+    friend class GridGenerator;
+
 private:
+    void makeNodeIndexes(void);
     std::map<const Node *, int> innerIndex;
     std::map<const Node *, int> outerIndex;
 };

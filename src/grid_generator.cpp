@@ -3,10 +3,9 @@
 #include <vector>
 #include <cmath>
 #include <stdexcept>
-#include <map>
 #include <iostream>
 
-#include "generate_grid.hpp"
+#include "grid_generator.hpp"
 
 namespace
 {
@@ -20,15 +19,31 @@ namespace
 
 Grid generateGrid(const Model &model, double xStep, double yStep)
 {
-    Grid grid;
+    auto generator = GridGenerator(model, xStep, yStep);
+    return generator.generateGrid();
+}
+
+Grid GridGenerator::generateGrid(void)
+{
     grid.xStep = xStep;
     grid.yStep = yStep;
+    calculateModelDimensions();
+    makeSlices();
+    leftToRightScan();
+    bottomToUpScan();
+    connectNodes();
+    validateGridIntegrity();
 
-    // Определить вернюю и нижнюю границы
-    double xMax = std::numeric_limits<double>::min(),
-           xMin = std::numeric_limits<double>::max(),
-           yMax = std::numeric_limits<double>::min(),
-           yMin = std::numeric_limits<double>::max();
+    grid.makeNodeIndexes();
+    return grid;
+}
+
+void GridGenerator::calculateModelDimensions(void)
+{
+    xMax = std::numeric_limits<double>::min();
+    xMin = std::numeric_limits<double>::max();
+    yMax = std::numeric_limits<double>::min();
+    yMin = std::numeric_limits<double>::max();
 
     for (auto bord : model.borders)
     {
@@ -39,7 +54,10 @@ Grid generateGrid(const Model &model, double xStep, double yStep)
         xMin = std::min(xBound.first, xMin);
         yMin = std::min(yBound.first, yMin);
     }
+}
 
+void GridGenerator::makeSlices(void)
+{
     // Определим сечения по X и сечения по Y
     std::vector<double> xSlices, ySlices;
     for (double currentX = std::ceil(xMin / xStep) * xStep; currentX <= std::floor(xMax / xStep) * xStep; currentX += xStep)
@@ -53,18 +71,14 @@ Grid generateGrid(const Model &model, double xStep, double yStep)
 
     grid.xSlices = xSlices;
     grid.ySlices = ySlices;
+}
 
-    // Создадим мапку для внутренних узлов
-    std::map<std::pair<int, int>, std::shared_ptr<InnerNode>> innerNodes;
-
-    // Создадим мапки для внешних узлов
-    std::map<std::pair<int, int>, std::shared_ptr<OuterNode>> outerVerticalNodes;
-    std::map<std::pair<int, int>, std::shared_ptr<OuterNode>> outerHorizontalNodes;
-
+void GridGenerator::bottomToUpScan(void)
+{
     // Проход "снизу вверх"
-    for (int ySliceIndex = 0; ySliceIndex < ySlices.size(); ySliceIndex++)
+    for (int ySliceIndex = 0; ySliceIndex < grid.ySlices.size(); ySliceIndex++)
     {
-        auto currentY = ySlices[ySliceIndex];
+        auto currentY = grid.ySlices[ySliceIndex];
         std::vector<std::pair<double, Border>> intersections; // Массив X-координат точек пересечения
         for (auto bord : model.borders)
         {
@@ -103,7 +117,7 @@ Grid generateGrid(const Model &model, double xStep, double yStep)
         {
             auto currentX = xSlices[sliceIndex];
 
-            // Проверить, является ли сетка "плохой"
+            // Проверить, является ли модель "плохой" для создания сетки
             if (i + 1 < intersections.size() && sliceIndex + 1 < xSlices.size())
             {
                 if (intersections[i + 1].first <= xSlices[sliceIndex + 1])
@@ -127,11 +141,11 @@ Grid generateGrid(const Model &model, double xStep, double yStep)
                     }
                     borderValue *= normal.first;
                 }
-                outerVerticalNodes.emplace(std::make_pair(sliceIndex, ySliceIndex),
-                                           std::make_shared<OuterNode>(point,
-                                                                       (i % 2 == 0 ? OuterNodeSide::Bottom : OuterNodeSide::Top),
-                                                                       border.type,
-                                                                       borderValue));
+                outerHorizontalNodes.emplace(std::make_pair(sliceIndex, ySliceIndex),
+                                             std::make_shared<OuterNode>(point,
+                                                                         (i % 2 == 0 ? OuterNodeSide::Bottom : OuterNodeSide::Top),
+                                                                         border.type,
+                                                                         borderValue));
                 i++;
                 continue;
             }
@@ -155,17 +169,20 @@ Grid generateGrid(const Model &model, double xStep, double yStep)
                     }
                     borderValue *= normal.first;
                 }
-                outerVerticalNodes.emplace(std::make_pair(sliceIndex + (i % 2 == 0 ? 0 : +1), ySliceIndex),
-                                           std::make_shared<OuterNode>(point,
-                                                                       (i % 2 == 0 ? OuterNodeSide::Bottom : OuterNodeSide::Top),
-                                                                       border.type,
-                                                                       borderValue));
+                outerHorizontalNodes.emplace(std::make_pair(sliceIndex + (i % 2 == 0 ? 0 : +1), ySliceIndex),
+                                             std::make_shared<OuterNode>(point,
+                                                                         (i % 2 == 0 ? OuterNodeSide::Bottom : OuterNodeSide::Top),
+                                                                         border.type,
+                                                                         borderValue));
                 i++;
                 continue;
             }
         }
     }
+}
 
+void GridGenerator::leftToRightScan(void)
+{
     // Проход "слева направо"
     for (int xSliceIndex = 0; xSliceIndex < xSlices.size(); xSliceIndex++)
     {
@@ -197,7 +214,7 @@ Grid generateGrid(const Model &model, double xStep, double yStep)
             }
         }
 
-        if (intersections.size() % 2 != 0)
+        if (intersections.size() % 2)
         {
             throw std::runtime_error("Odd point count! Wrong boundary line");
         }
@@ -234,11 +251,11 @@ Grid generateGrid(const Model &model, double xStep, double yStep)
                     }
                     borderValue *= normal.second;
                 }
-                outerHorizontalNodes.emplace(std::make_pair(xSliceIndex, sliceIndex),
-                                             std::make_shared<OuterNode>(point,
-                                                                         (i % 2 == 0 ? OuterNodeSide::Left : OuterNodeSide::Right),
-                                                                         border.type,
-                                                                         borderValue));
+                outerVerticalNodes.emplace(std::make_pair(xSliceIndex, sliceIndex),
+                                           std::make_shared<OuterNode>(point,
+                                                                       (i % 2 == 0 ? OuterNodeSide::Left : OuterNodeSide::Right),
+                                                                       border.type,
+                                                                       borderValue));
                 auto iter = innerNodes.find(std::make_pair(xSliceIndex, sliceIndex));
                 if (iter != innerNodes.end())
                 {
@@ -262,17 +279,20 @@ Grid generateGrid(const Model &model, double xStep, double yStep)
                     }
                     borderValue *= normal.second;
                 }
-                outerHorizontalNodes.emplace(std::make_pair(xSliceIndex, sliceIndex + (i % 2 == 0 ? 0 : +1)),
-                                             std::make_shared<OuterNode>(point,
-                                                                         (i % 2 == 0 ? OuterNodeSide::Left : OuterNodeSide::Right),
-                                                                         border.type,
-                                                                         borderValue));
+                outerVerticalNodes.emplace(std::make_pair(xSliceIndex, sliceIndex + (i % 2 == 0 ? 0 : +1)),
+                                           std::make_shared<OuterNode>(point,
+                                                                       (i % 2 == 0 ? OuterNodeSide::Left : OuterNodeSide::Right),
+                                                                       border.type,
+                                                                       borderValue));
                 i++;
                 continue;
             }
         }
     }
+}
 
+void GridGenerator::connectNodes(void)
+{
     // Обеспечим связность сетки
     for (auto node1 : innerNodes)
     {
@@ -281,88 +301,75 @@ Grid generateGrid(const Model &model, double xStep, double yStep)
         int xSliceIndex = node1.first.first;
         int ySliceIndex = node1.first.second;
 
-        // Ищем нижнего соседа
-        {
-            auto iter1 = innerNodes.find(std::make_pair(xSliceIndex, ySliceIndex - 1));
-            auto iter2 = outerHorizontalNodes.find(std::make_pair(xSliceIndex, ySliceIndex - 1));
-            if (iter1 != innerNodes.end())
-            {
-                node->bottom = std::weak_ptr<Node>(iter1->second);
-            }
-            else if (iter2 != outerHorizontalNodes.end())
-            {
-                node->bottom = std::weak_ptr<Node>(iter2->second);
-                iter2->second->top = std::weak_ptr<Node>(node);
-                grid.outerNodes.push_back(iter2->second);
-            }
-            else
-            {
-                throw std::runtime_error("Error while connecting nodes");
-            }
-        }
+        const auto &bottom = findNodeByCoords(xSliceIndex, ySliceIndex - 1, false, true);
+        const auto &top = findNodeByCoords(xSliceIndex, ySliceIndex + 1, false, true);
+        const auto &right = findNodeByCoords(xSliceIndex + 1, ySliceIndex, true, false);
+        const auto &left = findNodeByCoords(xSliceIndex - 1, ySliceIndex, true, false);
 
-        // Ищем верхнего соседа
-        {
-            auto iter1 = innerNodes.find(std::make_pair(xSliceIndex, ySliceIndex + 1));
-            auto iter2 = outerHorizontalNodes.find(std::make_pair(xSliceIndex, ySliceIndex + 1));
-            if (iter1 != innerNodes.end())
-            {
-                node->bottom = std::weak_ptr<Node>(iter1->second);
-            }
-            else if (iter2 != outerHorizontalNodes.end())
-            {
-                node->bottom = std::weak_ptr<Node>(iter2->second);
-                iter2->second->bottom = std::weak_ptr<Node>(node);
-                grid.outerNodes.push_back(iter2->second);
-            }
-            else
-            {
-                throw std::runtime_error("Error while connecting nodes");
-            }
-        }
+        node->bottom = bottom;
+        node->top = top;
+        node->right = right;
+        node->left = left;
+    }
+}
 
-        // Ищем правого соседа
-        {
-            auto iter1 = innerNodes.find(std::make_pair(xSliceIndex + 1, ySliceIndex));
-            auto iter2 = outerVerticalNodes.find(std::make_pair(xSliceIndex + 1, ySliceIndex));
-            if (iter1 != innerNodes.end())
-            {
-                node->bottom = std::weak_ptr<Node>(iter1->second);
-            }
-            else if (iter2 != outerVerticalNodes.end())
-            {
-                node->bottom = std::weak_ptr<Node>(iter2->second);
-                iter2->second->left = std::weak_ptr<Node>(node);
-                grid.outerNodes.push_back(iter2->second);
-            }
-            else
-            {
-                throw std::runtime_error("Error while connecting nodes");
-            }
-        }
+void GridGenerator::validateGridIntegrity(void) const
+{
+    for (int i = 0; i < grid.innerNodes.size(); i++)
+    {
+        const auto &node = grid.innerNodes[i];
+        const auto &left = node->left;
+        const auto &right = node->right;
+        const auto &top = node->top;
+        const auto &bottom = node->bottom;
 
-        // Ищем левого соседа
+        if (left.expired())
         {
-            auto iter1 = innerNodes.find(std::make_pair(xSliceIndex - 1, ySliceIndex));
-            auto iter2 = outerVerticalNodes.find(std::make_pair(xSliceIndex - 1, ySliceIndex));
-            if (iter1 != innerNodes.end())
-            {
-                node->bottom = std::weak_ptr<Node>(iter1->second);
-            }
-            else if (iter2 != outerVerticalNodes.end())
-            {
-                node->bottom = std::weak_ptr<Node>(iter2->second);
-                iter2->second->right = std::weak_ptr<Node>(node);
-                grid.outerNodes.push_back(iter2->second);
-            }
-            else
-            {
-                throw std::runtime_error("Error while connecting nodes");
-            }
+            throw std::runtime_error("Left neighbour is missing");
+        }
+        if (right.expired())
+        {
+            throw std::runtime_error("Right neighbour is missing");
+        }
+        if (top.expired())
+        {
+            throw std::runtime_error("Top neighbour is missing");
+        }
+        if (bottom.expired())
+        {
+            throw std::runtime_error("Bottom neighbour is missing");
+        }
+    }
+}
+
+std::weak_ptr<Node> GridGenerator::findNodeByCoords(
+    int xSliceIndex, int ySliceIndex,
+    bool includeHorizontalOuterNodes, bool includeVerticalOuterNodes) const
+{
+    const auto &searchTemplate = std::make_pair(xSliceIndex, ySliceIndex);
+    const auto &innerNodeIterator = innerNodes.find(searchTemplate);
+    if (innerNodeIterator != innerNodes.end())
+    {
+        return std::weak_ptr<Node>(innerNodeIterator->second);
+    }
+
+    if (includeVerticalOuterNodes)
+    {
+        const auto &outerVerticalNodeIterator = outerVerticalNodes.find(searchTemplate);
+        if (outerVerticalNodeIterator != outerVerticalNodes.end())
+        {
+            return std::weak_ptr<Node>(outerVerticalNodeIterator->second);
         }
     }
 
-    grid.makeNodeIndexes();
-    grid.validateIntegrity();
-    return grid;
+    if (includeHorizontalOuterNodes)
+    {
+        const auto &outerHorizontalNodeIterator = outerHorizontalNodes.find(searchTemplate);
+        if (outerHorizontalNodeIterator != outerHorizontalNodes.end())
+        {
+            return std::weak_ptr<Node>(outerHorizontalNodeIterator->second);
+        }
+    }
+
+    throw std::runtime_error("Node with such coords not found");
 }

@@ -6,7 +6,7 @@
 #include "solvers.hpp"
 #include "arc.hpp"
 #include "line.hpp"
-#include "generate_grid.hpp"
+#include "grid_generator.hpp"
 
 int main()
 {
