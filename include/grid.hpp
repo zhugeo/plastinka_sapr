@@ -64,7 +64,7 @@ public:
 
     double xStep, yStep;
 
-    friend class GridGenerator;
+    friend class GridExporter;
 
 private:
     void makeNodeIndexes(void);

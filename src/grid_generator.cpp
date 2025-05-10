@@ -1,11 +1,11 @@
+#include "grid_generator.hpp"
+
 #include <limits>
 #include <algorithm>
 #include <vector>
 #include <cmath>
 #include <stdexcept>
 #include <iostream>
-
-#include "grid_generator.hpp"
 
 namespace
 {
@@ -15,29 +15,58 @@ namespace
     {
         return std::abs(x - y) < EPS;
     }
+
+    enum SliceDirection
+    {
+        parallelToX,
+        parallelToY,
+    };
+
+    const std::vector<std::pair<double, Border>> sliceModel(const Model &model, double sliceLevel, SliceDirection direction)
+    {
+        std::vector<std::pair<double, Border>> intersections; // Массив X-координат точек пересечения
+        for (auto border : model.borders)
+        {
+            std::vector<double> delta;
+            if (direction == SliceDirection::parallelToX)
+            {
+                delta = border.curve->xIntersections(sliceLevel);
+            }
+            else
+            {
+                delta = border.curve->yIntersections(sliceLevel);
+            }
+
+            for (auto in : delta)
+            {
+                intersections.push_back(std::make_pair(in, border));
+            }
+        }
+
+        std::sort(intersections.begin(), intersections.end(), [](auto a, auto b)
+                  { return a.first < b.first; });
+
+        // Подчищаем "близко расположенные" точки
+        for (int i = 0; i < intersections.size() - 1;)
+        {
+            if (approxEqual(intersections[i + 1].first, intersections[i].first))
+            {
+                intersections.erase(intersections.begin() + i, intersections.begin() + i + 1);
+            }
+            else
+            {
+                i++;
+            }
+        }
+
+        if (intersections.size() % 2 != 0)
+        {
+            throw std::runtime_error("Odd point count! Wrong boundary line");
+        }
+
+        return intersections;
+    }
 } // namespace
-
-Grid generateGrid(const Model &model, double xStep, double yStep)
-{
-    auto generator = GridGenerator(model, xStep, yStep);
-    return generator.generateGrid();
-}
-
-Grid GridGenerator::generateGrid(void)
-{
-    grid.xStep = xStep;
-    grid.yStep = yStep;
-    calculateModelDimensions();
-    makeSlices();
-    bottomToUpScan();
-    leftToRightScan();
-    connectNodes();
-    loadNodesToGrid();
-    validateGridIntegrity();
-
-    grid.makeNodeIndexes();
-    return grid;
-}
 
 void GridGenerator::calculateModelDimensions(void)
 {
@@ -59,8 +88,6 @@ void GridGenerator::calculateModelDimensions(void)
 
 void GridGenerator::makeSlices(void)
 {
-    // Определим сечения по X и сечения по Y
-    std::vector<double> xSlices, ySlices;
     for (double currentX = std::ceil(xMin / xStep) * xStep; currentX <= std::floor(xMax / xStep) * xStep; currentX += xStep)
     {
         xSlices.push_back(currentX);
@@ -69,46 +96,15 @@ void GridGenerator::makeSlices(void)
     {
         ySlices.push_back(currentY);
     }
-
-    grid.xSlices = xSlices;
-    grid.ySlices = ySlices;
 }
 
 void GridGenerator::bottomToUpScan(void)
 {
     // Проход "снизу вверх"
-    for (int ySliceIndex = 0; ySliceIndex < grid.ySlices.size(); ySliceIndex++)
+    for (int ySliceIndex = 0; ySliceIndex < ySlices.size(); ySliceIndex++)
     {
-        const auto currentY = grid.ySlices[ySliceIndex];
-        std::vector<std::pair<double, Border>> intersections; // Массив X-координат точек пересечения
-        for (auto border : model.borders)
-        {
-            auto delta = border.curve->xIntersections(currentY);
-            for (auto in : delta)
-            {
-                intersections.push_back(std::make_pair(in, border));
-            }
-        }
-        std::sort(intersections.begin(), intersections.end(), [](auto a, auto b)
-                  { return a.first < b.first; });
-
-        // Подчищаем "близко расположенные" точки
-        for (int i = 0; i < intersections.size() - 1;)
-        {
-            if (approxEqual(intersections[i + 1].first, intersections[i].first))
-            {
-                intersections.erase(intersections.begin() + i, intersections.begin() + i + 1);
-            }
-            else
-            {
-                i++;
-            }
-        }
-
-        if (intersections.size() % 2 != 0)
-        {
-            throw std::runtime_error("Odd point count! Wrong boundary line");
-        }
+        double currentY = ySlices[ySliceIndex];
+        const auto intersections = sliceModel(model, currentY, SliceDirection::parallelToX);
 
         // Создаём внутренние и внешние узлы
 
@@ -188,35 +184,7 @@ void GridGenerator::leftToRightScan(void)
     for (int xSliceIndex = 0; xSliceIndex < xSlices.size(); xSliceIndex++)
     {
         auto currentX = xSlices[xSliceIndex];
-        std::vector<std::pair<double, Border>> intersections; // Массив Y-координат точек пересечения
-        for (auto border : model.borders)
-        {
-            auto delta = border.curve->yIntersections(currentX);
-            for (auto in : delta)
-            {
-                intersections.push_back(std::make_pair(in, border));
-            }
-        }
-        std::sort(intersections.begin(), intersections.end(), [](auto a, auto b)
-                  { return a.first < b.first; });
-
-        // Подчищаем "близко расположенные" точки
-        for (int i = 0; i < intersections.size() - 1;)
-        {
-            if (approxEqual(intersections[i + 1].first, intersections[i].first))
-            {
-                intersections.erase(intersections.begin() + i, intersections.begin() + i + 1);
-            }
-            else
-            {
-                i++;
-            }
-        }
-
-        if (intersections.size() % 2)
-        {
-            throw std::runtime_error("Odd point count! Wrong boundary line");
-        }
+        const auto intersections = sliceModel(model, currentX, SliceDirection::parallelToY);
 
         // Создаём внешние узлы и удаляем лишние внутренние
 
@@ -337,49 +305,6 @@ void GridGenerator::connectNodes(void)
     }
 }
 
-void GridGenerator::loadNodesToGrid(void)
-{
-    for (auto i : innerNodes)
-    {
-        const auto innerNode = i.second;
-        grid.innerNodes.push_back(innerNode);
-    }
-    for (auto outerNode : outerNodes)
-    {
-        grid.outerNodes.push_back(outerNode);
-    }
-}
-
-void GridGenerator::validateGridIntegrity(void)const
-{
-    for (int i = 0; i < grid.innerNodes.size(); i++)
-    {
-        const auto node = grid.innerNodes[i];
-
-        const auto left = node->left;
-        const auto right = node->right;
-        const auto top = node->top;
-        const auto bottom = node->bottom;
-
-        if (left.expired())
-        {
-            throw std::runtime_error("Left neighbour is missing");
-        }
-        if (right.expired())
-        {
-            throw std::runtime_error("Right neighbour is missing");
-        }
-        if (top.expired())
-        {
-            throw std::runtime_error("Top neighbour is missing");
-        }
-        if (bottom.expired())
-        {
-            throw std::runtime_error("Bottom neighbour is missing");
-        }
-    }
-}
-
 std::weak_ptr<Node> GridGenerator::findNodeByCoords(
     int xSliceIndex, int ySliceIndex,
     bool includeHorizontalOuterNodes, bool includeVerticalOuterNodes) const
@@ -410,4 +335,78 @@ std::weak_ptr<Node> GridGenerator::findNodeByCoords(
     }
 
     throw std::runtime_error("Node with such coords not found");
+}
+
+void GridExporter::loadNodesToGrid(void)
+{
+    for (auto i : generator.innerNodes)
+    {
+        const auto innerNode = i.second;
+        grid->innerNodes.push_back(innerNode);
+    }
+    for (auto outerNode : generator.outerNodes)
+    {
+        grid->outerNodes.push_back(outerNode);
+    }
+}
+
+void GridExporter::validateGridIntegrity(void) const
+{
+    for (int i = 0; i < grid->innerNodes.size(); i++)
+    {
+        const auto node = grid->innerNodes[i];
+
+        const auto left = node->left;
+        const auto right = node->right;
+        const auto top = node->top;
+        const auto bottom = node->bottom;
+
+        if (left.expired())
+        {
+            throw std::runtime_error("Left neighbour is missing");
+        }
+        if (right.expired())
+        {
+            throw std::runtime_error("Right neighbour is missing");
+        }
+        if (top.expired())
+        {
+            throw std::runtime_error("Top neighbour is missing");
+        }
+        if (bottom.expired())
+        {
+            throw std::runtime_error("Bottom neighbour is missing");
+        }
+    }
+}
+
+void GridGenerator::generateGrid(void)
+{
+    calculateModelDimensions();
+    makeSlices();
+    bottomToUpScan();
+    leftToRightScan();
+    connectNodes();
+}
+
+std::unique_ptr<Grid> GridExporter::exportGrid(void)
+{
+    grid = std::make_unique<Grid>();
+    grid->xSlices = generator.xSlices;
+    grid->ySlices = generator.ySlices;
+    grid->xStep = generator.xStep;
+    grid->yStep = generator.yStep;
+
+    loadNodesToGrid();
+    validateGridIntegrity();
+    grid->makeNodeIndexes();
+    return std::move(grid);
+}
+
+std::unique_ptr<Grid> generateGrid(const Model &model, double xStep, double yStep)
+{
+    auto generator = GridGenerator(model, xStep, yStep);
+    generator.generateGrid();
+    auto exporter = GridExporter(generator);
+    return exporter.exportGrid();
 }

@@ -32,9 +32,9 @@ int main()
         BorderType::constFlow, 0));
 
     auto g = generateGrid(model, 20, 20);
-    g.writeToFile("innerNodes.csv", "outerNodes.csv");
+    g->writeToFile("innerNodes.csv", "outerNodes.csv");
 
-    auto grid_pointer = std::make_shared<Grid>(g);
+    auto grid_pointer = std::shared_ptr<Grid>{std::move(g)};
 
     model.lambda = 100;
     model.c = 1;

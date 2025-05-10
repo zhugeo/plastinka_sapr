@@ -9,10 +9,9 @@ class GridGenerator
 {
 private:
     const Model &model;
-    Grid grid;
     double xMax, xMin, yMax, yMin;
     double &xStep, &yStep;
-    std::vector<double> &xSlices, &ySlices;
+    std::vector<double> xSlices, ySlices;
 
     std::map<std::pair<int, int>, std::shared_ptr<InnerNode>> innerNodes;
 
@@ -22,17 +21,13 @@ private:
     std::vector<std::shared_ptr<OuterNode>> outerNodes;
 
 public:
-    GridGenerator(const Model &model, double xStep_, double yStep_)
+    GridGenerator(const Model &model, double xStep, double yStep)
         : model(model),
-          xStep(grid.xStep),
-          yStep(grid.yStep),
-          xSlices(grid.xSlices),
-          ySlices(grid.ySlices)
+          xStep(xStep),
+          yStep(yStep)
     {
-        grid.xStep = xStep_;
-        grid.yStep = yStep_;
     }
-    Grid generateGrid(void);
+    void generateGrid(void);
 
 private:
     void calculateModelDimensions(void);
@@ -40,13 +35,30 @@ private:
     void bottomToUpScan(void);
     void leftToRightScan(void);
     void connectNodes(void);
-    void loadNodesToGrid(void);
-    void validateGridIntegrity(void) const;
 
     std::weak_ptr<Node> findNodeByCoords(int xSliceIndex,
                                          int ySliceIndex,
                                          bool includeHorizontalOuterNodes = false,
                                          bool includeVerticalOuterNodes = false) const;
+
+    friend class GridExporter;
 };
 
-Grid generateGrid(const Model &model, double xStep, double yStep);
+class GridExporter
+{
+private:
+    const GridGenerator &generator;
+    std::unique_ptr<Grid> grid;
+
+public:
+    GridExporter(const GridGenerator &generator) : generator(generator)
+    {
+    }
+    std::unique_ptr<Grid> exportGrid(void);
+
+private:
+    void loadNodesToGrid(void);
+    void validateGridIntegrity(void) const;
+};
+
+std::unique_ptr<Grid> generateGrid(const Model &model, double xStep, double yStep);

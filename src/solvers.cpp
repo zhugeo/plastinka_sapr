@@ -109,12 +109,6 @@ Solution solveImplicit(const Model &model, const std::shared_ptr<Grid> grid, dou
             }
         }
 
-        // В целях дебага можно перейти на плотные матрицы и попробовать эти проверки
-        // const auto matrixDeterminant = matrix.determinant();
-        // assert(matrixDeterminant != 0);
-        // assert(!std::isnan(matrixDeterminant));
-        // assert(isConsistent(matrix, vector));
-
         matrix.makeCompressed();
 
         Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
