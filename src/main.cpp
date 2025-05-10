@@ -12,26 +12,34 @@ int main()
 {
     Model model;
     model.borders.push_back(Border(
-        std::make_shared<Arc>(Point(10, 10), 10, 0, 90),
-        BorderType::constTemperature, 0));
+        std::make_shared<Line>(Point(0, 0), Point(0, 400)),
+        BorderType::constTemperature, 100));
     model.borders.push_back(Border(
-        std::make_shared<Arc>(Point(10, 10), 10, 180, 270),
-        BorderType::constTemperature, 0));
+        std::make_shared<Line>(Point(0, 0), Point(500, 0)),
+        BorderType::convection, 0.1));
     model.borders.push_back(Border(
-        std::make_shared<Line>(Point(0, 10), Point(0, 20)),
-        BorderType::constTemperature, 0));
+        std::make_shared<Line>(Point(0, 400), Point(350, 400)),
+        BorderType::constFlow, 0));
     model.borders.push_back(Border(
-        std::make_shared<Line>(Point(10, 20), Point(0, 20)),
-        BorderType::constTemperature, 0));
-    model.borders.push_back(Border(
-        std::make_shared<Line>(Point(10, 0), Point(20, 0)),
-        BorderType::constTemperature, 0));
-    model.borders.push_back(Border(
-        std::make_shared<Line>(Point(20, 0), Point(20, 10)),
-        BorderType::constTemperature, 0));
+        std::make_shared<Line>(Point(500, 0), Point(500, 250)),
+        BorderType::constTemperature, 100));
 
-    Grid g = generateGrid(model, 2, 2);
+    model.borders.push_back(Border(
+        std::make_shared<Arc>(Point(350, 250), 150, 0, 90),
+        BorderType::constFlow, 0));
+    model.borders.push_back(Border(
+        std::make_shared<Arc>(Point(155, 255), 50, 0, 360),
+        BorderType::constFlow, 0));
+
+    auto g = generateGrid(model, 20, 20);
     g.writeToFile("innerNodes.csv", "outerNodes.csv");
 
-    solveImplicit(model, g, 0.1, 100, 100.0);
+    auto grid_pointer = std::make_shared<Grid>(g);
+
+    model.lambda = 100;
+    model.c = 1;
+    model.rho = 1;
+
+    const auto solution = solveImplicit(model, grid_pointer, 1, 100, 0);
+    solution.printToFile("solutionImplicit.csv");
 }

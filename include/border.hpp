@@ -5,7 +5,9 @@
 enum BorderType
 {
     constTemperature,
+    // Положительное направление потока - из тела
     constFlow,
+    // Положительное направление потока - из тела
     convection,
 };
 

@@ -8,4 +8,5 @@ class Model
 {
 public:
     std::vector<Border> borders;
+    double lambda, c, rho;
 };

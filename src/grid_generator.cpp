@@ -79,7 +79,7 @@ void GridGenerator::bottomToUpScan(void)
     // Проход "снизу вверх"
     for (int ySliceIndex = 0; ySliceIndex < grid.ySlices.size(); ySliceIndex++)
     {
-        const auto &currentY = grid.ySlices[ySliceIndex];
+        const auto currentY = grid.ySlices[ySliceIndex];
         std::vector<std::pair<double, Border>> intersections; // Массив X-координат точек пересечения
         for (auto border : model.borders)
         {
@@ -250,7 +250,7 @@ void GridGenerator::leftToRightScan(void)
                     }
                     borderValue *= normal.second;
                 }
-                const auto &sliceCoords = std::make_pair(xSliceIndex, ySliceIndex);
+                const auto sliceCoords = std::make_pair(xSliceIndex, ySliceIndex);
                 outerVerticalNodes.emplace(sliceCoords,
                                            std::make_shared<OuterNode>(point,
                                                                        (i % 2 == 0 ? OuterNodeSide::Left : OuterNodeSide::Right),
@@ -293,57 +293,73 @@ void GridGenerator::leftToRightScan(void)
 
 void GridGenerator::connectNodes(void)
 {
+    const auto connectNodeIfOuter = [&](std::shared_ptr<InnerNode> parentNode, std::weak_ptr<Node> node)
+    {
+        auto lockedNode = node.lock();
+        const auto outerNodeCast = std::dynamic_pointer_cast<OuterNode>(lockedNode);
+        if (outerNodeCast != nullptr)
+        {
+            outerNodes.push_back(outerNodeCast);
+            outerNodeCast->parent = std::weak_ptr(parentNode);
+            const auto nodeCoords = outerNodeCast->coords;
+            const auto parentNodeCoords = parentNode->coords;
+            if (approxEqual(nodeCoords.x, parentNodeCoords.x))
+            {
+                outerNodeCast->muValue = std::abs(nodeCoords.y - parentNodeCoords.y) / yStep;
+            }
+            else
+            {
+                outerNodeCast->muValue = std::abs(nodeCoords.x - parentNodeCoords.x) / xStep;
+            }
+        }
+    };
     // Обеспечим связность сетки
     for (auto node1 : innerNodes)
     {
         auto node = node1.second;
-        const auto &xSliceIndex = node1.first.first;
-        const auto &ySliceIndex = node1.first.second;
+        const auto xSliceIndex = node1.first.first;
+        const auto ySliceIndex = node1.first.second;
 
-        const auto &bottom = findNodeByCoords(xSliceIndex, ySliceIndex - 1, false, true);
-        const auto &top = findNodeByCoords(xSliceIndex, ySliceIndex + 1, false, true);
-        const auto &right = findNodeByCoords(xSliceIndex + 1, ySliceIndex, true, false);
-        const auto &left = findNodeByCoords(xSliceIndex - 1, ySliceIndex, true, false);
+        auto bottom = findNodeByCoords(xSliceIndex, ySliceIndex - 1, false, true);
+        auto top = findNodeByCoords(xSliceIndex, ySliceIndex + 1, false, true);
+        auto right = findNodeByCoords(xSliceIndex + 1, ySliceIndex, true, false);
+        auto left = findNodeByCoords(xSliceIndex - 1, ySliceIndex, true, false);
 
         node->bottom = bottom;
         node->top = top;
         node->right = right;
         node->left = left;
+
+        connectNodeIfOuter(node, bottom);
+        connectNodeIfOuter(node, top);
+        connectNodeIfOuter(node, right);
+        connectNodeIfOuter(node, left);
     }
 }
 
 void GridGenerator::loadNodesToGrid(void)
 {
-    const auto &addIfOuterNode = [&](const std::weak_ptr<Node> &node)
-    {
-        const auto &outerNodeSmartPtrCast = dynamic_pointer_cast<OuterNode>(node.lock());
-        if (outerNodeSmartPtrCast != nullptr)
-        {
-            grid.outerNodes.push_back(outerNodeSmartPtrCast);
-        }
-    };
-
     for (auto i : innerNodes)
     {
-        const auto &innerNode = i.second;
+        const auto innerNode = i.second;
         grid.innerNodes.push_back(innerNode);
-        addIfOuterNode(innerNode->left);
-        addIfOuterNode(innerNode->right);
-        addIfOuterNode(innerNode->top);
-        addIfOuterNode(innerNode->bottom);
+    }
+    for (auto outerNode : outerNodes)
+    {
+        grid.outerNodes.push_back(outerNode);
     }
 }
 
-void GridGenerator::validateGridIntegrity(void) const
+void GridGenerator::validateGridIntegrity(void)const
 {
     for (int i = 0; i < grid.innerNodes.size(); i++)
     {
-        const auto &node = grid.innerNodes[i];
+        const auto node = grid.innerNodes[i];
 
-        const auto &left = node->left;
-        const auto &right = node->right;
-        const auto &top = node->top;
-        const auto &bottom = node->bottom;
+        const auto left = node->left;
+        const auto right = node->right;
+        const auto top = node->top;
+        const auto bottom = node->bottom;
 
         if (left.expired())
         {
@@ -368,8 +384,8 @@ std::weak_ptr<Node> GridGenerator::findNodeByCoords(
     int xSliceIndex, int ySliceIndex,
     bool includeHorizontalOuterNodes, bool includeVerticalOuterNodes) const
 {
-    const auto &searchTemplate = std::make_pair(xSliceIndex, ySliceIndex);
-    const auto &innerNodeIterator = innerNodes.find(searchTemplate);
+    const auto searchTemplate = std::make_pair(xSliceIndex, ySliceIndex);
+    const auto innerNodeIterator = innerNodes.find(searchTemplate);
     if (innerNodeIterator != innerNodes.end())
     {
         return std::weak_ptr<Node>(innerNodeIterator->second);
@@ -377,7 +393,7 @@ std::weak_ptr<Node> GridGenerator::findNodeByCoords(
 
     if (includeVerticalOuterNodes)
     {
-        const auto &outerVerticalNodeIterator = outerVerticalNodes.find(searchTemplate);
+        const auto outerVerticalNodeIterator = outerVerticalNodes.find(searchTemplate);
         if (outerVerticalNodeIterator != outerVerticalNodes.end())
         {
             return std::weak_ptr<Node>(outerVerticalNodeIterator->second);
@@ -386,7 +402,7 @@ std::weak_ptr<Node> GridGenerator::findNodeByCoords(
 
     if (includeHorizontalOuterNodes)
     {
-        const auto &outerHorizontalNodeIterator = outerHorizontalNodes.find(searchTemplate);
+        const auto outerHorizontalNodeIterator = outerHorizontalNodes.find(searchTemplate);
         if (outerHorizontalNodeIterator != outerHorizontalNodes.end())
         {
             return std::weak_ptr<Node>(outerHorizontalNodeIterator->second);

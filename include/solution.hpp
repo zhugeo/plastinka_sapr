@@ -9,8 +9,9 @@ class Solution
 {
 public:
     std::vector<std::vector<double>> T; // Значения фазовой переменной
-    Grid *grid;
+    std::shared_ptr<Grid> grid;
     double initialT;
+    double timeStep;
 
     void printToFile(const std::string &fileName) const;
 };

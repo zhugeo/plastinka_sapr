@@ -9,8 +9,14 @@ void Solution::printToFile(const std::string &fileName) const
     std::stringstream out;
 
     out << "t x y T" << std::endl;
-    for (const auto &timeLayer : this->T)
+    for (int iterationNumber = 0; iterationNumber < T.size(); iterationNumber++)
     {
+        for (int i = 0; i < grid->getNodeCount(); i++)
+        {
+            const auto node = grid->getNodeByIndex(i);
+            const auto nodeCoords = Node::getCoords(node);
+            out << iterationNumber * timeStep << " " << nodeCoords.x << " " << nodeCoords.y << " " << T[iterationNumber][i] << std::endl;
+        }
     }
     std::ofstream f_out(fileName);
     f_out << out.str();

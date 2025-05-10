@@ -19,6 +19,8 @@ private:
     std::map<std::pair<int, int>, std::shared_ptr<OuterNode>> outerHorizontalNodes;
     std::map<std::pair<int, int>, std::shared_ptr<OuterNode>> outerVerticalNodes;
 
+    std::vector<std::shared_ptr<OuterNode>> outerNodes;
+
 public:
     GridGenerator(const Model &model, double xStep_, double yStep_)
         : model(model),

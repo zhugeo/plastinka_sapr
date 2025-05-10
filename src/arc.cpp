@@ -39,6 +39,10 @@ std::vector<double> Arc::xIntersections(double yLevel) const
             answers.push_back(cand);
         }
     }
+    if (answers.size() == 1 && stopAngle - startAngle == 360)
+    {
+        return {};
+    }
     return answers;
 }
 
@@ -75,6 +79,10 @@ std::vector<double> Arc::yIntersections(double xLevel) const
         {
             answers.push_back(cand);
         }
+    }
+    if (answers.size() == 1 && stopAngle - startAngle == 360)
+    {
+        return {};
     }
     return answers;
 }
