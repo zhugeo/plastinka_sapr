@@ -6,6 +6,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <iostream>
+#include <cassert>
 
 namespace
 {
@@ -140,7 +141,7 @@ void GridGenerator::bottomToUpScan(void)
                 }
                 outerHorizontalNodes.emplace(std::make_pair(xSliceIndex, ySliceIndex),
                                              std::make_shared<OuterNode>(point,
-                                                                         (i % 2 == 0 ? OuterNodeSide::Bottom : OuterNodeSide::Top),
+                                                                         (i % 2 == 0 ? OuterNodeSide::Left : OuterNodeSide::Right),
                                                                          border.type,
                                                                          borderValue));
                 i++;
@@ -168,7 +169,7 @@ void GridGenerator::bottomToUpScan(void)
                 }
                 outerHorizontalNodes.emplace(std::make_pair(xSliceIndex + (i % 2 == 0 ? 0 : +1), ySliceIndex),
                                              std::make_shared<OuterNode>(point,
-                                                                         (i % 2 == 0 ? OuterNodeSide::Bottom : OuterNodeSide::Top),
+                                                                         (i % 2 == 0 ? OuterNodeSide::Left : OuterNodeSide::Right),
                                                                          border.type,
                                                                          borderValue));
                 i++;
@@ -221,7 +222,7 @@ void GridGenerator::leftToRightScan(void)
                 const auto sliceCoords = std::make_pair(xSliceIndex, ySliceIndex);
                 outerVerticalNodes.emplace(sliceCoords,
                                            std::make_shared<OuterNode>(point,
-                                                                       (i % 2 == 0 ? OuterNodeSide::Left : OuterNodeSide::Right),
+                                                                       (i % 2 == 0 ? OuterNodeSide::Bottom : OuterNodeSide::Top),
                                                                        border.type,
                                                                        borderValue));
                 auto iter = innerNodes.find(sliceCoords);
@@ -249,7 +250,7 @@ void GridGenerator::leftToRightScan(void)
                 }
                 outerVerticalNodes.emplace(std::make_pair(xSliceIndex, ySliceIndex + (i % 2 == 0 ? 0 : +1)),
                                            std::make_shared<OuterNode>(point,
-                                                                       (i % 2 == 0 ? OuterNodeSide::Left : OuterNodeSide::Right),
+                                                                       (i % 2 == 0 ? OuterNodeSide::Bottom : OuterNodeSide::Top),
                                                                        border.type,
                                                                        borderValue));
                 i++;
@@ -376,6 +377,34 @@ void GridExporter::validateGridIntegrity(void) const
         if (bottom.expired())
         {
             throw std::runtime_error("Bottom neighbour is missing");
+        }
+    }
+    for (int i = 0; i < grid->outerNodes.size(); i++)
+    {
+        if (grid->outerNodes[i]->parent.expired())
+        {
+            throw std::runtime_error("Parent is missing");
+        }
+    }
+    for (int i = 0; i < grid->outerNodes.size(); i++)
+    {
+        const auto node = grid->outerNodes[i];
+        const auto parentNode = node->parent.lock();
+        if (node->side == OuterNodeSide::Left)
+        {
+            assert(parentNode->left.lock() == node);
+        }
+        if (node->side == OuterNodeSide::Right)
+        {
+            assert(parentNode->right.lock() == node);
+        }
+        if (node->side == OuterNodeSide::Top)
+        {
+            assert(parentNode->top.lock() == node);
+        }
+        if (node->side == OuterNodeSide::Bottom)
+        {
+            assert(parentNode->bottom.lock() == node);
         }
     }
 }

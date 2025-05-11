@@ -13,8 +13,8 @@ df = pd.read_csv(
 times = df["t"].unique()
 times.sort()
 
-Tmin = -100  # df["T"].min()
-Tmax = 1000  # df["T"].max()
+Tmin = -10  # df["T"].min()
+Tmax = 100  # df["T"].max()
 
 fig, ax = plt.subplots(figsize=(10, 8))
 

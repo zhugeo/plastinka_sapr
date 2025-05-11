@@ -1,7 +1,13 @@
 #include "tridiagonal_matrix.hpp"
 
+#include <cassert>
+
 void TridiagonalMatrix::set(int i, int j, double value)
 {
+    assert(i >= 0);
+    assert(j >= 0);
+    assert(i < n);
+    assert(j < n);
 
     if (i == j)
     {

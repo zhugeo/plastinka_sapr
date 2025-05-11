@@ -16,10 +16,10 @@ int main()
         BorderType::constTemperature, 100));
     model.borders.push_back(Border(
         std::make_shared<Line>(Point(0, 0), Point(500, 0)),
-        BorderType::convection, 0.1));
+        BorderType::convection, 1));
     model.borders.push_back(Border(
         std::make_shared<Line>(Point(0, 400), Point(350, 400)),
-        BorderType::constFlow, 0));
+        BorderType::convection, 1));
     model.borders.push_back(Border(
         std::make_shared<Line>(Point(500, 0), Point(500, 250)),
         BorderType::constTemperature, 100));
@@ -40,6 +40,6 @@ int main()
     model.c = 1;
     model.rho = 1;
 
-    const auto solution = solveImplicit(model, grid_pointer, 1, 100, 0);
+    const auto solution = solveImplicitFast(model, grid_pointer, 1, 100, 0);
     solution.printToFile("solutionImplicit.csv");
 }
