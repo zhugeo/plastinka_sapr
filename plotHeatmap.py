@@ -39,7 +39,7 @@ def update(frame):
     y = frame_data["y"]
     z = frame_data["T"]
 
-    heatmap = ax.scatter(x, y, c=z, cmap="plasma", vmax=Tmax, vmin=Tmin)
+    heatmap = ax.scatter(x, y, c=z, cmap="plasma", vmax=Tmax, vmin=Tmin,marker='s')
 
     ax.set_title(f"t = {current_time:.2f}")
 

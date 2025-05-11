@@ -40,6 +40,6 @@ int main()
     model.c = 1;
     model.rho = 1;
 
-    const auto solution = solveImplicitFast(model, grid_pointer, 1, 100, 0);
+    const auto solution = solveImplicitFast(model, grid_pointer, 0.0, 1, 100);
     solution.printToFile("solutionImplicit.csv");
 }
