@@ -5,6 +5,8 @@
 #include "grid.hpp"
 #include "model.hpp"
 
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr)
+
 class GridGenerator
 {
 private:
@@ -62,3 +64,5 @@ private:
 };
 
 std::unique_ptr<Grid> generateGrid(const Model &model, double xStep, double yStep);
+
+PLSAPR_END_NAMESPACE(); // plastinka_sapr

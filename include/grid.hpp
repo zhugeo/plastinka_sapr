@@ -7,6 +7,8 @@
 #include "base.hpp"
 #include "border.hpp"
 
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr)
+
 enum OuterNodeSide
 {
     Left,
@@ -71,3 +73,5 @@ private:
     std::map<const Node *, int> innerIndex;
     std::map<const Node *, int> outerIndex;
 };
+
+PLSAPR_END_NAMESPACE(); // plastinka_sapr

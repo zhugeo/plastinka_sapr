@@ -1,6 +1,11 @@
 #pragma once
 
-#include "curve.hpp"
+#include <memory>
+
+#include "curves/curve.hpp"
+#include "base.hpp"
+
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr)
 
 enum BorderType
 {
@@ -14,10 +19,12 @@ enum BorderType
 class Border
 {
 public:
-    Border(CurvePtr curve,
+    Border(std::shared_ptr<const curves::Curve> curve,
            BorderType type,
            double value) : curve(curve), type(type), value(value) {};
-    CurvePtr curve;
+    std::shared_ptr<const curves::Curve> curve;
     BorderType type;
     double value;
 };
+
+PLSAPR_END_NAMESPACE(); // plastinka_sapr

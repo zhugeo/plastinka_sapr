@@ -3,6 +3,10 @@
 #include <vector>
 #include <stdexcept>
 
+#include "base.hpp"
+
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr);
+
 class TridiagonalMatrix
 {
 private:
@@ -22,3 +26,5 @@ public:
     void set(int i, int j, double value);
     std::vector<double> solve(const std::vector<double> &d) const;
 };
+
+PLSAPR_END_NAMESPACE(); // plastinka_sapr

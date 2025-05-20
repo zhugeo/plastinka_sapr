@@ -5,6 +5,8 @@
 
 #include "grid.hpp"
 
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr);
+
 class Solution
 {
 public:
@@ -15,3 +17,5 @@ public:
 
     void printToFile(const std::string &fileName) const;
 };
+
+PLSAPR_END_NAMESPACE(); // plastinka_sapr

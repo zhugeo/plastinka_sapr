@@ -1,4 +1,4 @@
-#include "solvers.hpp"
+#include "solvers/solvers.hpp"
 
 #include <cmath>
 #include <set>
@@ -9,6 +9,8 @@
 #include <Eigen/IterativeLinearSolvers>
 
 #include "tridiagonal_matrix.hpp"
+
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);
 
 void Solver::scanInnerNodes(const std::function<void(std::shared_ptr<InnerNode> node, double muX, double muY)> &fn) const
 {
@@ -473,3 +475,5 @@ Solution calculateError(const Model &model, const std::shared_ptr<Grid> grid, co
     ErrorCalculator calculator(model, grid, reference);
     return calculator.solve();
 }
+
+PLSAPR_END_NAMESPACE(); // plastinka_sapr::solvers

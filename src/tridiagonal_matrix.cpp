@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr);
+
 void TridiagonalMatrix::set(int i, int j, double value)
 {
     assert(i >= 0);
@@ -60,3 +62,5 @@ std::vector<double> TridiagonalMatrix::solve(std::vector<double> const &d) const
 
     return x;
 }
+
+PLSAPR_END_NAMESPACE(); // plastinka_sapr

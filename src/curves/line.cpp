@@ -1,7 +1,9 @@
 #include <algorithm>
 #include <cmath>
 
-#include "line.hpp"
+#include "curves/line.hpp"
+
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::curves);
 
 std::vector<double> Line::xIntersections(double yLevel) const
 {
@@ -56,3 +58,5 @@ std::pair<double, double> Line::getNormal(Point p) const
     double len = std::sqrt(std::pow(start.x - end.x, 2) + std::pow(start.y - end.y, 2));
     return std::make_pair((start.y - end.y) / len, -(start.x - end.x) / len);
 }
+
+PLSAPR_END_NAMESPACE(); // plastinka_sapr::curves

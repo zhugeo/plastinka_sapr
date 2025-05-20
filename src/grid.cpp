@@ -4,6 +4,8 @@
 
 #include "grid.hpp"
 
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr);
+
 Point Node::getCoords(const std::shared_ptr<const Node> node)
 {
     const auto innerNodePtr = dynamic_cast<const InnerNode *>(node.get());
@@ -119,3 +121,5 @@ int Grid::getNodeCount(void) const
 {
     return innerNodes.size() + outerNodes.size();
 }
+
+PLSAPR_END_NAMESPACE(); // plastinka_sapr

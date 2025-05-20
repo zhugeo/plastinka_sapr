@@ -8,6 +8,8 @@
 #include <iostream>
 #include <cassert>
 
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr);
+
 namespace
 {
     const double EPS = 1e-6;
@@ -439,3 +441,5 @@ std::unique_ptr<Grid> generateGrid(const Model &model, double xStep, double ySte
     auto exporter = GridExporter(generator);
     return exporter.exportGrid();
 }
+
+PLSAPR_END_NAMESPACE(); // plastinka_sapr

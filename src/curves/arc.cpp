@@ -3,7 +3,9 @@
 #include <numbers>
 #include <iostream>
 
-#include "arc.hpp"
+#include "curves/arc.hpp"
+
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::curves);
 
 std::vector<double> Arc::xIntersections(double yLevel) const
 {
@@ -102,3 +104,5 @@ std::pair<double, double> Arc::getNormal(Point p) const
     double RLen = std::sqrt(std::pow(p.x - center.x, 2) + std::pow(p.x - center.x, 2));
     return std::make_pair((center.x - p.x) / RLen, (center.y - p.y) / RLen);
 }
+
+PLSAPR_END_NAMESPACE(); // plastinka_sapr::curves

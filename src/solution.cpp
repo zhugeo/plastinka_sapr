@@ -4,6 +4,8 @@
 #include <fstream>
 #include <sstream>
 
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr);
+
 void Solution::printToFile(const std::string &fileName) const
 {
     std::stringstream out;
@@ -22,3 +24,5 @@ void Solution::printToFile(const std::string &fileName) const
     f_out << out.str();
     f_out.close();
 }
+
+PLSAPR_END_NAMESPACE(); // plastinka_sapr
