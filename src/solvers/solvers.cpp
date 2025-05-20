@@ -12,7 +12,7 @@
 #include "solvers/solvers.hpp"
 #include "solvers/implicit_solver.hpp"
 #include "solvers/implicit_fast_solver.hpp"
-#include "solvers/laplasian_calculator.hpp"
+#include "solvers/laplacian_calculator.hpp"
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);
 
@@ -28,9 +28,9 @@ Solution solveImplicitFast(const Model &model, const std::shared_ptr<Grid> grid,
     return solver.solve();
 }
 
-Solution calculateError(const Model &model, const std::shared_ptr<Grid> grid, const std::vector<double> &reference)
+Solution calculateLaplacian(const Model &model, const std::shared_ptr<Grid> grid, const std::vector<double> &reference)
 {
-    ErrorCalculator calculator(model, grid, reference);
+    LaplacianCalculator calculator(model, grid, reference);
     return calculator.solve();
 }
 

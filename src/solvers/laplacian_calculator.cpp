@@ -9,11 +9,11 @@
 #include <Eigen/IterativeLinearSolvers>
 
 #include "tridiagonal_matrix.hpp"
-#include "solvers/laplasian_calculator.hpp"
+#include "solvers/laplacian_calculator.hpp"
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);
 
-std::vector<double> ErrorCalculator::solveStep(const std::vector<double> &prevT) const
+std::vector<double> LaplacianCalculator::solveStep(const std::vector<double> &prevT) const
 {
     const int N = grid->getNodeCount();
     std::vector<double> thisT(N, 0);
@@ -47,7 +47,7 @@ std::vector<double> ErrorCalculator::solveStep(const std::vector<double> &prevT)
 }
 
 
-Solution ErrorCalculator::solve()
+Solution LaplacianCalculator::solve()
 {
     std::vector<std::vector<double>> T;
 

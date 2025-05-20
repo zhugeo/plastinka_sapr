@@ -11,7 +11,7 @@
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);
 
-class ErrorCalculator : public BaseSolver
+class LaplacianCalculator : public BaseSolver
 {
 private:
     double dt;
@@ -21,7 +21,7 @@ private:
     std::vector<double> solveStep(const std::vector<double> &prevT) const;
 
 public:
-    ErrorCalculator(const Model &model,
+    LaplacianCalculator(const Model &model,
                     const std::shared_ptr<Grid> grid,
                     const std::vector<double> &reference) : BaseSolver(model, grid, 0),
                                                             reference(reference) {}
