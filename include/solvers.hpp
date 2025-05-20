@@ -73,6 +73,25 @@ public:
     virtual Solution solve() override;
 };
 
+class ErrorCalculator : public Solver
+{
+private:
+    double dt;
+    int numIters;
+    const std::vector<double> &reference;
+
+    std::vector<double> solveStep(const std::vector<double> &prevT) const;
+
+public:
+    ErrorCalculator(const Model &model,
+                    const std::shared_ptr<Grid> grid,
+                    const std::vector<double> &reference) : Solver(model, grid, 0),
+                                                            reference(reference) {}
+    virtual Solution solve() override;
+};
+
 Solution solveImplicit(const Model &model, const std::shared_ptr<Grid> grid, double initT, double dt, int numIters);
 
 Solution solveImplicitFast(const Model &model, const std::shared_ptr<Grid> grid, double initT, double dt, int numIters);
+
+Solution calculateError(const Model &model, const std::shared_ptr<Grid> grid, const std::vector<double> &reference);

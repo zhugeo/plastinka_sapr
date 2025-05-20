@@ -26,12 +26,12 @@ int main()
 
     model.borders.push_back(Border(
         std::make_shared<Arc>(Point(350, 250), 150, 0, 90),
-        BorderType::constFlow, 0));
+        BorderType::convection, 1));
     model.borders.push_back(Border(
         std::make_shared<Arc>(Point(155, 255), 50, 0, 360),
         BorderType::constFlow, 0));
 
-    auto g = generateGrid(model, 20, 20);
+    auto g = generateGrid(model, 10, 10);
     g->writeToFile("innerNodes.csv", "outerNodes.csv");
 
     auto grid_pointer = std::shared_ptr<Grid>{std::move(g)};
@@ -40,6 +40,9 @@ int main()
     model.c = 1;
     model.rho = 1;
 
-    const auto solution = solveImplicitFast(model, grid_pointer, 0.0, 1, 100);
+    const auto solution = solveImplicitFast(model, grid_pointer, 0.0, 1, 1000);
     solution.printToFile("solutionImplicit.csv");
+
+    //const auto sol2 = calculateError(model, grid_pointer, solution.T.back());
+    //sol2.printToFile("errors.csv");
 }

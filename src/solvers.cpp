@@ -379,6 +379,39 @@ std::vector<double> ImplicitFastSolver::solveStep(const std::vector<double> &pre
     return thisT;
 }
 
+std::vector<double> ErrorCalculator::solveStep(const std::vector<double> &prevT) const
+{
+    const int N = grid->getNodeCount();
+    std::vector<double> thisT(N, 0);
+
+    Eigen::SparseMatrix<double> matrix(N, N);
+    Eigen::VectorXd vector = Eigen::VectorXd::Zero(N);
+
+    const auto writeInnerNodeEquation = [&](std::shared_ptr<InnerNode> node, double muX, double muY)
+    {
+        const auto leftNode = node->left.lock();
+        const auto rightNode = node->right.lock();
+        const auto topNode = node->top.lock();
+        const auto bottomNode = node->bottom.lock();
+
+        const int nodeIndex = grid->getNodeIndex(node);
+        const int leftNodeIndex = grid->getNodeIndex(node->left.lock());
+        const int rightNodeIndex = grid->getNodeIndex(node->right.lock());
+        const int topNodeIndex = grid->getNodeIndex(node->top.lock());
+        const int bottomNodeIndex = grid->getNodeIndex(node->bottom.lock());
+
+        double K = 2 * model.lambda * 1 / model.c / model.rho;
+        double Kx = 1 / (muX * (muX + 1) * grid->xStep * grid->xStep);
+        double Ky = 1 / (muY * (muY + 1) * grid->yStep * grid->yStep);
+
+        thisT[nodeIndex] = K * Kx * (muX * prevT[leftNodeIndex] - (muX + 1) * prevT[nodeIndex] + prevT[rightNodeIndex]) + K * Ky * (muY * prevT[bottomNodeIndex] - (muY + 1) * prevT[nodeIndex] + prevT[topNodeIndex]);
+    };
+
+    scanInnerNodes(writeInnerNodeEquation);
+
+    return thisT;
+}
+
 Solution ImplicitSolver::solve()
 {
     fillInitialStep();
@@ -411,6 +444,18 @@ Solution ImplicitFastSolver::solve()
     return s;
 }
 
+Solution ErrorCalculator::solve()
+{
+    std::vector<std::vector<double>> T;
+
+    T.push_back(solveStep(reference));
+
+    Solution s;
+    s.grid = grid;
+    s.T = T;
+    return s;
+}
+
 Solution solveImplicit(const Model &model, const std::shared_ptr<Grid> grid, double initT, double dt, int numIters)
 {
     ImplicitSolver solver(model, grid, initT, dt, numIters);
@@ -421,4 +466,10 @@ Solution solveImplicitFast(const Model &model, const std::shared_ptr<Grid> grid,
 {
     ImplicitFastSolver solver(model, grid, initT, dt, numIters);
     return solver.solve();
+}
+
+Solution calculateError(const Model &model, const std::shared_ptr<Grid> grid, const std::vector<double> &reference)
+{
+    ErrorCalculator calculator(model, grid, reference);
+    return calculator.solve();
 }
