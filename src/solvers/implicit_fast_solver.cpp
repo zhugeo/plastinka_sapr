@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <set>
-#include <iostream>
 #include <cassert>
 
 #include "matrices/tridiagonal_matrix.hpp"

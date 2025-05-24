@@ -1,10 +1,7 @@
-#include "solvers/solvers.hpp"
+#include "solvers/base_solver.hpp"
 
 #include <cmath>
 #include <set>
-#include <iostream>
-
-#include "solvers/base_solver.hpp"
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);
 

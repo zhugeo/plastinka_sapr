@@ -14,7 +14,7 @@ enum OuterNodeSide
     Left,
     Right,
     Top,
-    Bottom
+    Bottom,
 };
 
 class Node

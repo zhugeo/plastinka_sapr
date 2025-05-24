@@ -1,11 +1,9 @@
-#include "solvers/solvers.hpp"
+#include "solvers/implicit_solver.hpp"
 
 #include <cmath>
 #include <set>
-#include <iostream>
 
 #include "matrices/eigen_sparce_matrix.hpp"
-#include "solvers/implicit_solver.hpp"
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);
 

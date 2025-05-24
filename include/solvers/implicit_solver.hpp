@@ -1,12 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <functional>
 
-#include "grid.hpp"
-#include "model.hpp"
-#include "solution.hpp"
-#include "base.hpp"
 #include "solvers/base_solver.hpp"
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);

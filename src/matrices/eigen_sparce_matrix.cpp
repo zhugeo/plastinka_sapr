@@ -1,5 +1,7 @@
 #include "matrices/eigen_sparce_matrix.hpp"
 
+#include <Eigen/IterativeLinearSolvers>
+
 #include <cassert>
 #include <cmath>
 

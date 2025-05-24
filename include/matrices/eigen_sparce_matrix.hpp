@@ -3,8 +3,6 @@
 #include <vector>
 
 #include <Eigen/SparseLU>
-#include <Eigen/Dense>
-#include <Eigen/IterativeLinearSolvers>
 
 #include "base_matrix.hpp"
 

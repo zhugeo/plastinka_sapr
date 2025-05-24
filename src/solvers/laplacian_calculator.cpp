@@ -3,8 +3,6 @@
 #include <cmath>
 #include <set>
 
-#include <iostream>
-
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);
 
 std::vector<double> LaplacianCalculator::solveStep(const std::vector<double> &prevT) const
