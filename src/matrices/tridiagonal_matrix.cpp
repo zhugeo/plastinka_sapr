@@ -1,15 +1,18 @@
-#include "tridiagonal_matrix.hpp"
+#include "matrices/tridiagonal_matrix.hpp"
 
 #include <cassert>
+#include <cmath>
+#include <stdexcept>
 
-PLSAPR_BEGIN_NAMESPACE(plastinka_sapr);
+PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::matrices);
 
 void TridiagonalMatrix::set(int i, int j, double value)
 {
     assert(i >= 0);
     assert(j >= 0);
-    assert(i < n);
-    assert(j < n);
+    assert(i < size);
+    assert(j < size);
+    assert (!std::isnan(value));
 
     if (i == j)
     {
@@ -31,20 +34,20 @@ void TridiagonalMatrix::set(int i, int j, double value)
 
 std::vector<double> TridiagonalMatrix::solve(std::vector<double> const &d) const
 {
-    if (d.size() != static_cast<size_t>(n))
+    if (d.size() != static_cast<size_t>(size))
     {
         throw std::invalid_argument("Vector size must match matrix size");
     }
 
-    std::vector<double> x(n);
-    std::vector<double> alpha(n - 1);
-    std::vector<double> beta(n);
+    std::vector<double> x(size);
+    std::vector<double> alpha(size - 1);
+    std::vector<double> beta(size);
 
     // Прямой ход прогонки
     alpha[0] = -c[0] / b[0];
     beta[0] = d[0] / b[0];
 
-    for (int i = 1; i < n - 1; ++i)
+    for (int i = 1; i < size - 1; ++i)
     {
         double denominator = b[i] + a[i - 1] * alpha[i - 1];
         alpha[i] = -c[i] / denominator;
@@ -52,10 +55,10 @@ std::vector<double> TridiagonalMatrix::solve(std::vector<double> const &d) const
     }
 
     // Обратный ход прогонки
-    beta[n - 1] = (d[n - 1] - a[n - 2] * beta[n - 2]) / (b[n - 1] + a[n - 2] * alpha[n - 2]);
-    x[n - 1] = beta[n - 1];
+    beta[size - 1] = (d[size - 1] - a[size - 2] * beta[size - 2]) / (b[size - 1] + a[size - 2] * alpha[size - 2]);
+    x[size - 1] = beta[size - 1];
 
-    for (int i = n - 2; i >= 0; --i)
+    for (int i = size - 2; i >= 0; --i)
     {
         x[i] = alpha[i] * x[i + 1] + beta[i];
     }
@@ -63,4 +66,4 @@ std::vector<double> TridiagonalMatrix::solve(std::vector<double> const &d) const
     return x;
 }
 
-PLSAPR_END_NAMESPACE(); // plastinka_sapr
+PLSAPR_END_NAMESPACE(); // plastinka_sapr::matrices

@@ -4,12 +4,6 @@
 #include <set>
 #include <iostream>
 
-#include <Eigen/SparseLU>
-#include <Eigen/Dense>
-#include <Eigen/IterativeLinearSolvers>
-
-#include "tridiagonal_matrix.hpp"
-#include "solvers/solvers.hpp"
 #include "solvers/implicit_solver.hpp"
 #include "solvers/implicit_fast_solver.hpp"
 #include "solvers/laplacian_calculator.hpp"

@@ -4,22 +4,17 @@
 #include <set>
 #include <iostream>
 
-#include <Eigen/SparseLU>
-#include <Eigen/Dense>
-#include <Eigen/IterativeLinearSolvers>
-
-#include "tridiagonal_matrix.hpp"
+#include "matrices/eigen_sparce_matrix.hpp"
 #include "solvers/implicit_solver.hpp"
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);
 
 std::vector<double> ImplicitSolver::solveStep(const std::vector<double> &prevT) const
 {
-    const int N = grid->getNodeCount();
-    std::vector<double> thisT(N, 0);
+    const auto N = grid->getNodeCount();
 
-    Eigen::SparseMatrix<double> matrix(N, N);
-    Eigen::VectorXd vector = Eigen::VectorXd::Zero(N);
+    auto matrix = matrices::SparceMatrixLU(N);
+    auto vector = std::vector<double>(N, 0);
 
     const auto writeInnerNodeEquation = [&](std::shared_ptr<InnerNode> node, double muX, double muY)
     {
@@ -38,13 +33,12 @@ std::vector<double> ImplicitSolver::solveStep(const std::vector<double> &prevT) 
         double Kx = 1 / (muX * (muX + 1) * grid->xStep * grid->xStep);
         double Ky = 1 / (muY * (muY + 1) * grid->yStep * grid->yStep);
 
-        matrix.insert(nodeIndex, nodeIndex) = (-K * Kx * (muX + 1) - K * Ky * (muY + 1) - 1);
-        assert(!std::isnan(matrix.coeff(nodeIndex, nodeIndex)));
-        matrix.insert(nodeIndex, leftNodeIndex) = K * Kx * muX;
-        matrix.insert(nodeIndex, rightNodeIndex) = K * Kx;
-        matrix.insert(nodeIndex, topNodeIndex) = K * Ky;
-        matrix.insert(nodeIndex, bottomNodeIndex) = K * Ky * muY;
-        vector(nodeIndex) = -prevT[nodeIndex];
+        matrix.set(nodeIndex, nodeIndex, -K * Kx * (muX + 1) - K * Ky * (muY + 1) - 1);
+        matrix.set(nodeIndex, leftNodeIndex, K * Kx * muX);
+        matrix.set(nodeIndex, rightNodeIndex, K * Kx);
+        matrix.set(nodeIndex, topNodeIndex, K * Ky);
+        matrix.set(nodeIndex, bottomNodeIndex, K * Ky * muY);
+        vector[nodeIndex] = -prevT[nodeIndex];
     };
 
     scanInnerNodes(writeInnerNodeEquation);
@@ -63,36 +57,24 @@ std::vector<double> ImplicitSolver::solveStep(const std::vector<double> &prevT) 
         assert(nodeIndex != parentNodeIndex);
         if (borderType == BorderType::constFlow)
         {
-            matrix.insert(nodeIndex, parentNodeIndex) = -1;
-            matrix.insert(nodeIndex, nodeIndex) = 1;
-            vector(nodeIndex) = node->borderValue * node->muValue * relevantStep;
+            matrix.set(nodeIndex, parentNodeIndex, -1);
+            matrix.set(nodeIndex, nodeIndex, 1);
+            vector[nodeIndex] = node->borderValue * node->muValue * relevantStep;
         }
         else if (borderType == BorderType::constTemperature)
         {
-            matrix.insert(nodeIndex, nodeIndex) = 1;
-            vector(nodeIndex) = node->borderValue;
+            matrix.set(nodeIndex, nodeIndex, 1);
+            vector[nodeIndex] = node->borderValue;
         }
         else if (borderType == BorderType::convection)
         {
-            matrix.insert(nodeIndex, nodeIndex) = 1 - node->borderValue * node->muValue * relevantStep;
-            matrix.insert(nodeIndex, parentNodeIndex) = -1;
-            vector(nodeIndex) = 0;
+            matrix.set(nodeIndex, nodeIndex, 1 - node->borderValue * node->muValue * relevantStep);
+            matrix.set(nodeIndex, parentNodeIndex, -1);
+            vector[nodeIndex] = 0;
         }
     }
 
-    matrix.makeCompressed();
-
-    Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
-    solver.analyzePattern(matrix);
-    solver.factorize(matrix);
-
-    const auto solution = solver.solve(vector);
-
-    for (int i = 0; i < N; i++)
-    {
-        thisT[i] = solution(i);
-    }
-    return thisT;
+    return matrix.solve(vector);
 }
 
 Solution ImplicitSolver::solve()

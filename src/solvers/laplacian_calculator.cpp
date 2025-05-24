@@ -1,15 +1,9 @@
-#include "solvers/solvers.hpp"
+#include "solvers/laplacian_calculator.hpp"
 
 #include <cmath>
 #include <set>
+
 #include <iostream>
-
-#include <Eigen/SparseLU>
-#include <Eigen/Dense>
-#include <Eigen/IterativeLinearSolvers>
-
-#include "tridiagonal_matrix.hpp"
-#include "solvers/laplacian_calculator.hpp"
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);
 
@@ -17,9 +11,6 @@ std::vector<double> LaplacianCalculator::solveStep(const std::vector<double> &pr
 {
     const int N = grid->getNodeCount();
     std::vector<double> thisT(N, 0);
-
-    Eigen::SparseMatrix<double> matrix(N, N);
-    Eigen::VectorXd vector = Eigen::VectorXd::Zero(N);
 
     const auto writeInnerNodeEquation = [&](std::shared_ptr<InnerNode> node, double muX, double muY)
     {

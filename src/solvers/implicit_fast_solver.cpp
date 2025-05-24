@@ -1,15 +1,11 @@
-#include "solvers/solvers.hpp"
+#include "solvers/implicit_fast_solver.hpp"
 
 #include <cmath>
 #include <set>
 #include <iostream>
+#include <cassert>
 
-#include <Eigen/SparseLU>
-#include <Eigen/Dense>
-#include <Eigen/IterativeLinearSolvers>
-
-#include "tridiagonal_matrix.hpp"
-#include "solvers/implicit_fast_solver.hpp"
+#include "matrices/tridiagonal_matrix.hpp"
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);
 
@@ -64,7 +60,7 @@ std::vector<double> ImplicitFastSolver::solveStep(const std::vector<double> &pre
     }
 
     // Инициализировать трёхдиагональную матрицу
-    TridiagonalMatrix matrix(indexedNodes.size());
+    matrices::TridiagonalMatrix matrix(indexedNodes.size());
     std::vector<double> vec(indexedNodes.size());
 
     // Составить СЛАУ для проиндексированных узлов
@@ -185,7 +181,7 @@ std::vector<double> ImplicitFastSolver::solveStep(const std::vector<double> &pre
     }
 
     // Инициализировать трёхдиагональную матрицу
-    matrix = TridiagonalMatrix(indexedNodes.size());
+    matrix = matrices::TridiagonalMatrix(indexedNodes.size());
     vec = std::vector<double>(indexedNodes.size());
 
     // Составить СЛАУ для проиндексированных узлов

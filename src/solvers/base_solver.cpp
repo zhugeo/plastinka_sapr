@@ -4,11 +4,6 @@
 #include <set>
 #include <iostream>
 
-#include <Eigen/SparseLU>
-#include <Eigen/Dense>
-#include <Eigen/IterativeLinearSolvers>
-
-#include "tridiagonal_matrix.hpp"
 #include "solvers/base_solver.hpp"
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);
