@@ -9,6 +9,8 @@
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::solvers);
 
+Solution solveExplicit(const Model &model, const std::shared_ptr<Grid> grid, double initT, double dt, int numIters);
+
 Solution solveImplicit(const Model &model, const std::shared_ptr<Grid> grid, double initT, double dt, int numIters);
 
 Solution solveImplicitFast(const Model &model, const std::shared_ptr<Grid> grid, double initT, double dt, int numIters);

@@ -8,6 +8,10 @@
 
 #define PLSAPR_END_NAMESPACE() }
 
+#define PLSAPR_BEGIN_ANONYMOUS_NAMESPACE \
+    namespace                            \
+    {
+
 class Point
 {
 public:
