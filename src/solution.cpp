@@ -6,12 +6,12 @@
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr);
 
-void Solution::printToFile(const std::string &fileName) const
+void Solution::printToFile(const std::string &fileName, int eachN) const
 {
     std::stringstream out;
 
     out << "t x y T" << std::endl;
-    for (int iterationNumber = 0; iterationNumber < T.size(); iterationNumber++)
+    for (int iterationNumber = 0; iterationNumber < T.size(); iterationNumber += eachN)
     {
         for (int i = 0; i < grid->getNodeCount(); i++)
         {

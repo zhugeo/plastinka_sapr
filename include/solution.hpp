@@ -15,7 +15,7 @@ public:
     double initialT;
     double timeStep;
 
-    void printToFile(const std::string &fileName) const;
+    void printToFile(const std::string &fileName, int eachN = 1) const;
 };
 
 PLSAPR_END_NAMESPACE(); // plastinka_sapr

@@ -42,8 +42,8 @@ int main()
     model.c = 1;
     model.rho = 1;
 
-    const auto solution = solvers::solveExplicit(model, grid_pointer, 0.0, 1, 10);
-    solution.printToFile("solutionImplicit.csv");
+    const auto solution = solvers::solveExplicit(model, grid_pointer, 0.0, 0.1, 20000);
+    solution.printToFile("solutionImplicit.csv", 100);
 
     // const auto sol2 = calculateError(model, grid_pointer, solution.T.back());
     // sol2.printToFile("errors.csv");
