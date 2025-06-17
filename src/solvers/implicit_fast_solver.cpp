@@ -91,7 +91,7 @@ std::vector<double> ImplicitFastSolver::solveStep(const std::vector<double> &pre
         matrix.set(nodeIndexMat, nodeIndexMat, -K * Kx * (muX + 1) - K * Ky * (muY + 1) - 1);
         matrix.set(nodeIndexMat, leftNodeIndexMat, K * Kx * muX);
         matrix.set(nodeIndexMat, rightNodeIndexMat, K * Kx);
-        vec[nodeIndexMat] = -prevT[nodeIndex] - K * Ky * (muY * w_bottom + w_top);
+        vec[nodeIndexMat] = -prevT[nodeIndex];
     };
     scanInnerNodes(writeInnerNodeEquationHorizontal);
 
@@ -202,8 +202,8 @@ std::vector<double> ImplicitFastSolver::solveStep(const std::vector<double> &pre
         double Kx = 1 / (muX * (muX + 1) * grid->xStep * grid->xStep);
         double Ky = 1 / (muY * (muY + 1) * grid->yStep * grid->yStep);
 
-        double w_left = prevT[leftNodeIndex];
-        double w_right = prevT[rightNodeIndex];
+        double w_left = thisT[leftNodeIndex];
+        double w_right = thisT[rightNodeIndex];
 
         int nodeIndexMat = indexedNodesRind[nodeIndex];
         int topNodeIndexMat = indexedNodesRind[topNodeIndex];
@@ -212,7 +212,7 @@ std::vector<double> ImplicitFastSolver::solveStep(const std::vector<double> &pre
         matrix.set(nodeIndexMat, nodeIndexMat, -K * Kx * (muX + 1) - K * Ky * (muY + 1) - 1);
         matrix.set(nodeIndexMat, topNodeIndexMat, K * Kx * muX);
         matrix.set(nodeIndexMat, bottomNodeIndexMat, K * Kx);
-        vec[nodeIndexMat] = -prevT[nodeIndex] - K * Ky * (muY * w_left + w_right);
+        vec[nodeIndexMat] = -prevT[nodeIndex];
     };
     scanInnerNodes(writeInnerNodeEquationVertical);
 

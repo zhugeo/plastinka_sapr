@@ -24,7 +24,7 @@ std::vector<double> ExplicitSolver::solveStep(const std::vector<double> &prevT) 
         const double prevRightT = prevT[grid->getNodeIndex(node->right.lock())];
         const double prevLeftT = prevT[grid->getNodeIndex(node->left.lock())];
 
-        thisT[nodeIndex] = prevThisT + K * Kx * muX * prevLeftT - K * Kx * (muX + 1) * prevThisT + K * Kx * prevRightT + K * Ky * muY * prevBottomT - K * Ky * (muY + 1) * prevThisT + K * Ky * prevTopT;
+        thisT[nodeIndex] = prevThisT + (K * Kx * muX * prevLeftT - K * Kx * (muX + 1) * prevThisT + K * Kx * prevRightT + K * Ky * muY * prevBottomT - K * Ky * (muY + 1) * prevThisT + K * Ky * prevTopT);
     };
 
     scanInnerNodes(calculateNode);

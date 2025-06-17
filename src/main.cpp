@@ -42,9 +42,9 @@ int main()
     model.c = 1;
     model.rho = 1;
 
-    const auto solution = solvers::solveExplicit(model, grid_pointer, 0.0, 0.1, 20000);
-    solution.printToFile("solutionImplicit.csv", 100);
+    const auto solution1 = solvers::solveExplicit(model, grid_pointer, 0.0, 0.01, 10000);
+    solution1.printToFile("solutionExplicit.csv", 10);
 
-    // const auto sol2 = calculateError(model, grid_pointer, solution.T.back());
-    // sol2.printToFile("errors.csv");
+    const auto solution2 = solvers::solveImplicitFast(model, grid_pointer, 0.0, 0.01, 10000);
+    solution2.printToFile("solutionImplicit.csv", 10);
 }
