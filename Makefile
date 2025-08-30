@@ -1,8 +1,10 @@
 .PHONY: build clean
 
-build:
+configure:
 	mkdir -p build
 	cd build && cmake .. -GNinja -DCXX=clang++ -DCC=clang
+
+build: configure
 	cd build && cmake --build .
 
 clean:

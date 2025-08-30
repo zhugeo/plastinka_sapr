@@ -10,4 +10,8 @@ file(GLOB sources1 "src/**/*.cpp")
 file(GLOB sources2 "src/*.cpp")
 
 add_executable(Plastinka ${sources1} ${sources2})
-target_include_directories(Plastinka PUBLIC include 3rdparty/eigen)
+
+include(cmake/CPM.cmake)
+CPMAddPackage("gh:eigen-mirror/eigen#3.4.0")
+target_link_libraries(Plastinka PUBLIC Eigen3::Eigen)
+target_include_directories(Plastinka PUBLIC include)
