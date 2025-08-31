@@ -1,6 +1,6 @@
 #pragma once
 
-#include "curve.hpp"
+#include "curves/curve.hpp"
 #include "base.hpp"
 
 PLSAPR_BEGIN_NAMESPACE(plastinka_sapr::curves);

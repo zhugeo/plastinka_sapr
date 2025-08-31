@@ -15,7 +15,7 @@ protected:
 
 public:
     virtual void set(int i, int j, double value) final override;
-    virtual std::vector<double> solve(const std::vector<double> &x) const = 0;
+    virtual std::vector<double> solve(const std::vector<double> &x) const override = 0;
 
     BaseSparceMatrix(int size) : BaseMatrix(size), matrix(size, size) {}
 };
